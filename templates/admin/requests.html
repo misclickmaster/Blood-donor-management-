@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Requests - Admin Panel - LifeStream{% endblock %}
+
+{% block content %}
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Admin Navigation Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                    <i class="fa-solid fa-heart-pulse mr-1.5"></i> Emergency Appeals
+                </span>
+                <h1 class="text-3xl font-extrabold text-slate-900 mt-1">Manage Blood Requests</h1>
+            </div>
+
+            <!-- Admin Nav Tabs -->
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ url_for('admin_dashboard') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-chart-pie mr-1.5"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin_donors') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-users mr-1.5"></i> Manage Donors
+                </a>
+                <a href="{{ url_for('admin_requests') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm">
+                    <i class="fa-solid fa-heart-pulse mr-1.5"></i> Manage Requests
+                </a>
+                <a href="{{ url_for('admin_database') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-database mr-1.5"></i> Database Management
+                </a>
+            </div>
+        </div>
+
+        <!-- Requests Management Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-xs">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Patient / Case</th>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Group & Units</th>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Hospital / City</th>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Urgency</th>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Contact</th>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Status Update</th>
+                            <th scope="col" class="px-4 py-3 text-right font-bold text-slate-600 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        {% for r in requests %}
+                        <tr class="hover:bg-slate-50/80 transition">
+                            <td class="px-4 py-3">
+                                <div class="font-bold text-slate-900">{{ r.patient_name }}</div>
+                                <div class="text-[10px] text-slate-400 italic line-clamp-1">"{{ r.reason or 'Urgent need' }}"</div>
+                            </td>
+
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-black bg-rose-100 text-blood-700">
+                                    {{ r.blood_group }}
+                                </span>
+                                <span class="text-[10px] text-slate-500 block font-semibold">{{ r.units_needed }} Unit{{ 's' if r.units_needed > 1 else '' }}</span>
+                            </td>
+
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="font-medium text-slate-800">{{ r.hospital_name }}</div>
+                                <div class="text-[10px] text-slate-400">{{ r.city }}, {{ r.state }}</div>
+                            </td>
+
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold 
+                                    {% if r.urgency_level == 'Critical' %}bg-red-100 text-red-700{% elif r.urgency_level == 'Urgent' %}bg-amber-100 text-amber-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                                    {{ r.urgency_level }}
+                                </span>
+                            </td>
+
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="font-bold text-slate-800">{{ r.contact_person }}</div>
+                                <a href="tel:{{ r.contact_phone }}" class="text-[10px] text-blood-600 font-mono hover:underline">{{ r.contact_phone }}</a>
+                            </td>
+
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <form action="{{ url_for('admin_update_request_status', request_id=r.id) }}" method="POST" class="flex items-center space-x-1.5">
+                                    <select name="status" onchange="this.form.submit()" class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-[11px] font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                        <option value="Pending" {% if r.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                        <option value="Fulfilled" {% if r.status == 'Fulfilled' %}selected{% endif %}>Fulfilled</option>
+                                        <option value="Cancelled" {% if r.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                    </select>
+                                </form>
+                            </td>
+
+                            <td class="px-4 py-3 whitespace-nowrap text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a href="{{ url_for('request_details', request_id=r.id) }}" class="p-1 text-slate-400 hover:text-indigo-600 rounded" title="View Details">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    </a>
+                                    <form action="{{ url_for('admin_delete_request', request_id=r.id) }}" method="POST" onsubmit="return confirm('Delete this blood request?');" class="inline">
+                                        <button type="submit" class="p-1 text-rose-500 hover:text-rose-700 rounded" title="Delete">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

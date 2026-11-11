@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Database Management - Admin Panel - LifeStream{% endblock %}
+
+{% block content %}
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Admin Navigation Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                    <i class="fa-solid fa-database mr-1.5"></i> DBMS Administrator Console
+                </span>
+                <h1 class="text-3xl font-extrabold text-slate-900 mt-1">Database Management System</h1>
+                <p class="text-xs text-slate-500 mt-1">Direct SQLite engine inspector, table browser, schema viewer, and interactive SQL query console.</p>
+            </div>
+
+            <!-- Admin Nav Tabs -->
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ url_for('admin_dashboard') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-chart-pie mr-1.5"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin_donors') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-users mr-1.5"></i> Manage Donors
+                </a>
+                <a href="{{ url_for('admin_requests') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-heart-pulse mr-1.5"></i> Manage Requests
+                </a>
+                <a href="{{ url_for('admin_database') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm">
+                    <i class="fa-solid fa-database mr-1.5"></i> Database Management
+                </a>
+            </div>
+        </div>
+
+        <!-- Database Maintenance Bar -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-server"></i>
+                </div>
+                <div>
+                    <div class="text-xs font-bold text-slate-900">
+                        Active Database Engine: <span class="uppercase text-purple-700 font-extrabold">{{ active_db_engine }}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500">
+                        {% if active_db_engine == 'mysql' %}
+                            MySQL Server <code>localhost:3306</code> • Database: <code>blood_bank_db</code> • Status: Connected & Healthy
+                        {% else %}
+                            SQLite Local <code>blood_bank.db</code> (Auto-fallback mode when MySQL service is off)
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <a href="{{ url_for('download_database') }}" class="inline-flex items-center px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition">
+                    <i class="fa-solid fa-download mr-1.5"></i> Export .db Backup
+                </a>
+
+                <form action="{{ url_for('reset_and_seed_database') }}" method="POST" onsubmit="return confirm('WARNING: This will wipe and re-seed all tables with default sample data. Proceed?');">
+                    <button type="submit" class="inline-flex items-center px-3.5 py-2 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition">
+                        <i class="fa-solid fa-rotate mr-1.5"></i> Reset & Re-Seed Data
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Live SQL Query Console (For College Viva & Lab Demo) -->
+        <div class="bg-slate-900 text-slate-100 rounded-2xl p-6 shadow-md mb-8">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+                    <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                    <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+                    <span class="text-xs font-mono font-bold text-slate-300 ml-2">Interactive SQL Query Console (Read-Only)</span>
+                </div>
+                <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded font-mono">SELECT queries only</span>
+            </div>
+
+            <form action="{{ url_for('admin_database') }}" method="POST" class="space-y-3">
+                <input type="hidden" name="run_query" value="1">
+                <div>
+                    <textarea name="sql_query" rows="3" placeholder="e.g. SELECT blood_group, COUNT(*) as total FROM donors GROUP BY blood_group;"
+                              class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs font-mono text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500">{{ custom_sql }}</textarea>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap gap-2 text-[11px]">
+                        <span class="text-slate-400">Quick queries:</span>
+                        <button type="button" onclick="setQuery('SELECT blood_group, count(*) as donors_count FROM donors GROUP BY blood_group;')" class="text-xs text-sky-400 hover:underline">
+                            Blood Group Count
+                        </button>
+                        <span class="text-slate-600">|</span>
+                        <button type="button" onclick="setQuery('SELECT city, count(*) as count FROM donors GROUP BY city ORDER BY count DESC;')" class="text-xs text-sky-400 hover:underline">
+                            Donors by City
+                        </button>
+                        <span class="text-slate-600">|</span>
+                        <button type="button" onclick="setQuery('SELECT patient_name, blood_group, urgency_level, status FROM blood_requests;')" class="text-xs text-sky-400 hover:underline">
+                            Active Requests
+                        </button>
+                    </div>
+
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center">
+                        <i class="fa-solid fa-play mr-1.5"></i> Run Query
+                    </button>
+                </div>
+            </form>
+
+            <!-- Query Results -->
+            {% if error_msg %}
+            <div class="mt-4 p-3 bg-red-950/80 border border-red-800 text-red-300 rounded-xl text-xs font-mono">
+                <strong>Error:</strong> {{ error_msg }}
+            </div>
+            {% elif query_result is not none %}
+            <div class="mt-4 border-t border-slate-800 pt-4">
+                <div class="text-[11px] text-slate-400 mb-2 font-mono">Query Result ({{ query_result | length }} rows returned):</div>
+                <div class="overflow-x-auto max-h-60 bg-slate-950 rounded-xl border border-slate-800">
+                    <table class="min-w-full divide-y divide-slate-800 text-xs font-mono">
+                        <thead class="bg-slate-900 text-slate-300">
+                            <tr>
+                                {% for col in query_columns %}
+                                <th class="px-3 py-2 text-left text-[11px] uppercase font-bold">{{ col }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800 text-slate-200">
+                            {% for row in query_result %}
+                            <tr class="hover:bg-slate-900/50">
+                                {% for val in row %}
+                                <td class="px-3 py-1.5 whitespace-nowrap">{{ val }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Tables Browser Tabs -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+            <!-- Table Tabs Navigation -->
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2">Tables:</span>
+                    {% for t in tables %}
+                    <a href="{{ url_for('admin_database', table=t) }}" 
+                       class="px-3 py-1.5 rounded-lg text-xs font-bold transition {% if selected_table == t %}bg-slate-900 text-white shadow-sm{% else %}bg-white text-slate-600 hover:bg-slate-200/80 border border-slate-200{% endif %}">
+                        <i class="fa-solid fa-table mr-1 text-[10px]"></i> {{ t }}
+                    </a>
+                    {% endfor %}
+                </div>
+
+                <div class="text-xs text-slate-400 font-mono">
+                    Showing top 100 rows in <span class="font-bold text-slate-700">{{ selected_table }}</span>
+                </div>
+            </div>
+
+            <!-- Selected Table Raw Content -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-xs font-mono">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            {% for col in columns %}
+                            <th scope="col" class="px-3.5 py-2.5 text-left font-bold text-slate-600 uppercase tracking-wider">
+                                {{ col }}
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        {% for row in rows %}
+                        <tr class="hover:bg-slate-50 transition">
+                            {% for col in columns %}
+                            <td class="px-3.5 py-2 whitespace-nowrap text-slate-700">
+                                {{ row[col] if row[col] is not none else 'NULL' }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function setQuery(sql) {
+        document.querySelector('textarea[name="sql_query"]').value = sql;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Log In - LifeStream Blood Network{% endblock %}
+
+{% block content %}
+<div class="py-16 bg-slate-50 flex items-center justify-center">
+    <div class="max-w-md w-full mx-4">
+        
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-blood-700 to-rose-500 text-white shadow-lg shadow-rose-500/25 mb-3">
+                <i class="fa-solid fa-lock text-2xl"></i>
+            </div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Welcome Back</h1>
+            <p class="text-xs text-slate-500 mt-1">Sign in to your donor or administrator account</p>
+        </div>
+
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+            
+            <form action="{{ url_for('login', next=request.args.get('next')) }}" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-envelope text-xs"></i>
+                        </span>
+                        <input type="email" id="emailInput" name="email" required placeholder="name@example.com"
+                               class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blood-500 focus:bg-white transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-key text-xs"></i>
+                        </span>
+                        <input type="password" id="passwordInput" name="password" required placeholder="••••••••"
+                               class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blood-500 focus:bg-white transition">
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-blood-600 hover:bg-blood-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-rose-500/20 transition transform active:scale-95 text-sm flex items-center justify-center">
+                        <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i> Sign In
+                    </button>
+                </div>
+            </form>
+
+            <div class="relative flex items-center justify-center">
+                <div class="border-t border-slate-200 w-full"></div>
+                <span class="bg-white px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Quick Demo Login</span>
+            </div>
+
+            <!-- Quick Demo Credential Autofill Buttons for Viva -->
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" onclick="fillAdminCreds()" class="py-2 px-3 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 rounded-xl text-left transition">
+                    <div class="text-[11px] font-extrabold text-indigo-700 flex items-center">
+                        <i class="fa-solid fa-shield-halved mr-1.5"></i> Admin Demo
+                    </div>
+                    <div class="text-[10px] text-indigo-500 truncate mt-0.5">admin@bloodfinder.com</div>
+                </button>
+
+                <button type="button" onclick="fillDonorCreds()" class="py-2 px-3 border border-rose-200 bg-rose-50 hover:bg-rose-100 rounded-xl text-left transition">
+                    <div class="text-[11px] font-extrabold text-rose-700 flex items-center">
+                        <i class="fa-solid fa-droplet mr-1.5"></i> Donor Demo
+                    </div>
+                    <div class="text-[10px] text-rose-500 truncate mt-0.5">aarav.sharma@example.com</div>
+                </button>
+            </div>
+
+            <div class="border-t border-slate-100 pt-4 text-center text-xs text-slate-500">
+                Don't have a donor profile yet? 
+                <a href="{{ url_for('register') }}" class="text-blood-600 font-bold hover:underline">Register here</a>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function fillAdminCreds() {
+        document.getElementById('emailInput').value = 'admin@bloodfinder.com';
+        document.getElementById('passwordInput').value = 'admin123';
+    }
+    function fillDonorCreds() {
+        document.getElementById('emailInput').value = 'aarav.sharma@example.com';
+        document.getElementById('passwordInput').value = 'donor123';
+    }
+</script>
+{% endblock %}

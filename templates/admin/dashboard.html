@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - LifeStream{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js CDN for analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Admin Navigation Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                    <i class="fa-solid fa-shield-halved mr-1.5"></i> Administrator Control Center
+                </span>
+                <h1 class="text-3xl font-extrabold text-slate-900 mt-1">Platform Analytics & Management</h1>
+            </div>
+
+            <!-- Admin Nav Tabs -->
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ url_for('admin_dashboard') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm">
+                    <i class="fa-solid fa-chart-pie mr-1.5"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin_donors') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-users mr-1.5"></i> Manage Donors
+                </a>
+                <a href="{{ url_for('admin_requests') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-heart-pulse mr-1.5"></i> Manage Requests
+                </a>
+                <a href="{{ url_for('admin_database') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-database mr-1.5"></i> Database Management
+                </a>
+            </div>
+        </div>
+
+        <!-- Metrics Overview Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Donors</div>
+                    <div class="text-3xl font-extrabold text-slate-900 mt-1">{{ total_donors }}</div>
+                    <span class="text-[11px] text-emerald-600 font-semibold"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Registered Network</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-rose-100 text-blood-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Available Donors</div>
+                    <div class="text-3xl font-extrabold text-emerald-600 mt-1">{{ available_donors }}</div>
+                    <span class="text-[11px] text-slate-400">Ready for direct call</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Pending Appeals</div>
+                    <div class="text-3xl font-extrabold text-amber-600 mt-1">{{ pending_requests }}</div>
+                    <span class="text-[11px] text-amber-600 font-semibold">Active in hospitals</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-hospital"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Requests</div>
+                    <div class="text-3xl font-extrabold text-indigo-600 mt-1">{{ total_requests }}</div>
+                    <span class="text-[11px] text-emerald-600 font-semibold">{{ fulfilled_requests }} fulfilled</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+            <!-- Blood Group Distribution Chart -->
+            <div class="lg:col-span-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-bold text-slate-900 flex items-center">
+                        <i class="fa-solid fa-chart-column text-blood-600 mr-2"></i>
+                        Donor Blood Group Distribution Inventory
+                    </h2>
+                    <span class="text-xs text-slate-400">Active Database Records</span>
+                </div>
+                <div class="h-64">
+                    <canvas id="bloodGroupChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Quick Summary Panel -->
+            <div class="lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h2 class="text-sm font-bold text-slate-900 mb-3 flex items-center">
+                        <i class="fa-solid fa-bolt text-amber-500 mr-2"></i> Quick Administrative Tools
+                    </h2>
+                    <p class="text-xs text-slate-500 leading-relaxed mb-4">
+                        Perform administrative controls, audit database records, review pending emergency calls, or manage donor verification.
+                    </p>
+
+                    <div class="space-y-2.5">
+                        <a href="{{ url_for('admin_donors') }}" class="block p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 transition">
+                            <i class="fa-solid fa-user-check text-emerald-600 mr-2"></i> Verify / Audit Donors
+                        </a>
+                        <a href="{{ url_for('admin_requests') }}" class="block p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 transition">
+                            <i class="fa-solid fa-list-check text-blue-600 mr-2"></i> Review Emergency Requests
+                        </a>
+                        <a href="{{ url_for('admin_database') }}" class="block p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 transition">
+                            <i class="fa-solid fa-database text-purple-600 mr-2"></i> Live Database SQL Console
+                        </a>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 mt-4">
+                    <a href="{{ url_for('download_database') }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition">
+                        <i class="fa-solid fa-download mr-2"></i> Download Database Backup
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Tables Split -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Recent Requests -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold text-slate-900">Recent Blood Appeals</h3>
+                    <a href="{{ url_for('admin_requests') }}" class="text-xs font-bold text-blood-600 hover:underline">View All</a>
+                </div>
+                <div class="divide-y divide-slate-100 text-xs">
+                    {% for r in recent_requests %}
+                    <div class="py-3 first:pt-0 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 rounded-lg bg-rose-100 text-blood-700 font-black flex items-center justify-center text-xs">
+                                {{ r.blood_group }}
+                            </span>
+                            <div>
+                                <div class="font-bold text-slate-800">{{ r.patient_name }}</div>
+                                <div class="text-slate-400 text-[10px]">{{ r.hospital_name }} • {{ r.city }}</div>
+                            </div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold 
+                            {% if r.status == 'Fulfilled' %}bg-emerald-100 text-emerald-800{% else %}bg-amber-100 text-amber-800{% endif %}">
+                            {{ r.status }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Recent Donors -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold text-slate-900">Newly Registered Donors</h3>
+                    <a href="{{ url_for('admin_donors') }}" class="text-xs font-bold text-blood-600 hover:underline">View All</a>
+                </div>
+                <div class="divide-y divide-slate-100 text-xs">
+                    {% for d in recent_donors %}
+                    <div class="py-3 first:pt-0 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 rounded-lg bg-slate-900 text-white font-black flex items-center justify-center text-xs">
+                                {{ d.blood_group }}
+                            </span>
+                            <div>
+                                <div class="font-bold text-slate-800">{{ d.name }}</div>
+                                <div class="text-slate-400 text-[10px]">{{ d.city }}, {{ d.state }} • {{ d.phone }}</div>
+                            </div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold 
+                            {% if d.is_available %}bg-emerald-100 text-emerald-800{% else %}bg-slate-100 text-slate-600{% endif %}">
+                            {{ 'Available' if d.is_available else 'Resting' }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('bloodGroupChart').getContext('2d');
+        const labels = {{ blood_labels | tojson }};
+        const data = {{ blood_counts | tojson }};
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Registered Donors',
+                    data: data,
+                    backgroundColor: [
+                        '#e11d48', '#f43f5e', '#fb7185', '#fda4af',
+                        '#be123c', '#9f1239', '#881337', '#e11d48'
+                    ],
+                    borderRadius: 8,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        },
+                        grid: {
+                            color: '#f1f5f9'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

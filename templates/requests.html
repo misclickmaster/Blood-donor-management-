@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency Blood Requests - LifeStream{% endblock %}
+
+{% block content %}
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header & Action -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-blood-600">Live Transfusion Board</span>
+                <h1 class="text-3xl font-extrabold text-slate-900 mt-1">Emergency Blood Requests</h1>
+                <p class="text-sm text-slate-500 mt-1">Real-time urgent appeals from patients and emergency hospital units.</p>
+            </div>
+            <div>
+                <a href="{{ url_for('post_request') }}" class="inline-flex items-center px-4 py-2.5 rounded-xl font-bold text-sm text-white bg-blood-600 hover:bg-blood-700 shadow-md shadow-rose-500/20 transition transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-plus-circle mr-2"></i> Post Emergency Request
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm mb-8">
+            <form action="{{ url_for('view_requests') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-center">
+                
+                <!-- Status Filter -->
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Status</label>
+                    <select name="status" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blood-500">
+                        <option value="Pending" {% if selected_status == 'Pending' %}selected{% endif %}>Pending (Active Only)</option>
+                        <option value="Fulfilled" {% if selected_status == 'Fulfilled' %}selected{% endif %}>Fulfilled / Completed</option>
+                        <option value="All" {% if selected_status == 'All' %}selected{% endif %}>All Requests</option>
+                    </select>
+                </div>
+
+                <!-- Blood Group Filter -->
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Blood Group</label>
+                    <select name="blood_group" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blood-500">
+                        <option value="">All Groups</option>
+                        {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                            <option value="{{ bg }}" {% if selected_blood_group == bg %}selected{% endif %}>{{ bg }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Urgency Filter -->
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Urgency</label>
+                    <select name="urgency" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blood-500">
+                        <option value="All">All Urgency Levels</option>
+                        <option value="Critical" {% if selected_urgency == 'Critical' %}selected{% endif %}>Critical Priority</option>
+                        <option value="Urgent" {% if selected_urgency == 'Urgent' %}selected{% endif %}>Urgent Priority</option>
+                        <option value="Normal" {% if selected_urgency == 'Normal' %}selected{% endif %}>Normal</option>
+                    </select>
+                </div>
+
+                <!-- City Search -->
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">City</label>
+                    <input type="text" name="city" value="{{ selected_city }}" placeholder="Filter by city..."
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blood-500">
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-4 sm:pt-0">
+                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition">
+                        <i class="fa-solid fa-filter mr-1"></i> Filter Requests
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- Requests List / Grid -->
+        {% if requests %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for r in requests %}
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between relative overflow-hidden group">
+                
+                <!-- Top Urgency Border Line -->
+                <div class="absolute top-0 right-0 left-0 h-1.5 
+                    {% if r.status == 'Fulfilled' %}
+                        bg-emerald-500
+                    {% elif r.urgency_level == 'Critical' %}
+                        bg-red-500
+                    {% elif r.urgency_level == 'Urgent' %}
+                        bg-amber-500
+                    {% else %}
+                        bg-blue-500
+                    {% endif %}"></div>
+
+                <div>
+                    <!-- Header Badges -->
+                    <div class="flex items-center justify-between mb-3 mt-1">
+                        <div class="flex items-center space-x-1.5">
+                            {% if r.status == 'Fulfilled' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    <i class="fa-solid fa-circle-check text-[10px] mr-1"></i> Fulfilled
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold 
+                                    {% if r.urgency_level == 'Critical' %}
+                                        bg-red-100 text-red-700 border border-red-200 animate-pulse
+                                    {% elif r.urgency_level == 'Urgent' %}
+                                        bg-amber-100 text-amber-700 border border-amber-200
+                                    {% else %}
+                                        bg-blue-100 text-blue-700 border border-blue-200
+                                    {% endif %}">
+                                    <i class="fa-solid fa-triangle-exclamation text-[10px] mr-1"></i> {{ r.urgency_level }}
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <span class="text-[11px] text-slate-400">
+                            {{ r.created_at[:10] }}
+                        </span>
+                    </div>
+
+                    <!-- Main Patient & Blood info -->
+                    <div class="flex items-center space-x-3.5 mb-4">
+                        <div class="w-14 h-14 rounded-2xl bg-blood-600 text-white flex flex-col items-center justify-center font-black text-xl shadow-md shadow-rose-200 shrink-0">
+                            {{ r.blood_group }}
+                            <span class="text-[9px] font-normal leading-tight uppercase">{{ r.units_needed }} Unit{{ 's' if r.units_needed > 1 else '' }}</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base leading-tight">{{ r.patient_name }}</h3>
+                            <p class="text-xs text-slate-600 font-medium flex items-center mt-1">
+                                <i class="fa-solid fa-hospital text-slate-400 mr-1.5 text-[11px]"></i> {{ r.hospital_name }}
+                            </p>
+                            <p class="text-xs text-slate-500 flex items-center mt-0.5">
+                                <i class="fa-solid fa-location-dot text-rose-500 mr-1.5 text-[11px]"></i> {{ r.city }}, {{ r.state }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Reason -->
+                    {% if r.reason %}
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs text-slate-600 mb-4 italic line-clamp-2">
+                        "{{ r.reason }}"
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Footer & Action -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="text-slate-400 block text-[10px]">Contact Person</span>
+                        <span class="font-bold text-slate-700">{{ r.contact_person }}</span>
+                    </div>
+
+                    <a href="{{ url_for('request_details', request_id=r.id) }}" class="inline-flex items-center px-3.5 py-1.5 text-xs font-bold text-white bg-blood-600 hover:bg-blood-700 rounded-xl transition shadow-sm">
+                        Details & Donors <i class="fa-solid fa-arrow-right ml-1.5 text-[10px]"></i>
+                    </a>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center max-w-lg mx-auto shadow-sm">
+            <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-3"></i>
+            <h3 class="text-base font-bold text-slate-800">No Requests Found</h3>
+            <p class="text-xs text-slate-500 mt-1 mb-6">No emergency requests match your current filters.</p>
+            <a href="{{ url_for('view_requests') }}" class="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                Reset Filters
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

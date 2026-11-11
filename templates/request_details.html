@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency Request: {{ req.patient_name }} ({{ req.blood_group }}) - LifeStream{% endblock %}
+
+{% block content %}
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Top Back Breadcrumb -->
+        <div class="mb-6">
+            <a href="{{ url_for('view_requests') }}" class="text-xs font-bold text-slate-500 hover:text-blood-600 transition flex items-center">
+                <i class="fa-solid fa-arrow-left mr-1.5"></i> Back to All Requests
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Main Request Info (7 cols) -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 relative overflow-hidden">
+                    <!-- Urgency Bar -->
+                    <div class="absolute top-0 right-0 left-0 h-1.5 
+                        {% if req.status == 'Fulfilled' %}
+                            bg-emerald-500
+                        {% elif req.urgency_level == 'Critical' %}
+                            bg-red-500
+                        {% elif req.urgency_level == 'Urgent' %}
+                            bg-amber-500
+                        {% else %}
+                            bg-blue-500
+                        {% endif %}"></div>
+
+                    <!-- Header -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-2">
+                            {% if req.status == 'Fulfilled' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    <i class="fa-solid fa-circle-check mr-1.5"></i> Fulfilled
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold 
+                                    {% if req.urgency_level == 'Critical' %}
+                                        bg-red-100 text-red-700 border border-red-200 animate-pulse
+                                    {% elif req.urgency_level == 'Urgent' %}
+                                        bg-amber-100 text-amber-700 border border-amber-200
+                                    {% else %}
+                                        bg-blue-100 text-blue-700 border border-blue-200
+                                    {% endif %}">
+                                    <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> {{ req.urgency_level }} Urgency
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <span class="text-xs text-slate-400">Posted on: {{ req.created_at }}</span>
+                    </div>
+
+                    <!-- Blood Group & Patient Name Hero -->
+                    <div class="flex items-center space-x-5 py-4 border-b border-slate-100">
+                        <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blood-700 to-rose-500 text-white flex flex-col items-center justify-center font-black text-2xl shadow-lg shadow-rose-200 shrink-0">
+                            {{ req.blood_group }}
+                            <span class="text-[10px] font-semibold uppercase tracking-wider">{{ req.units_needed }} Unit{{ 's' if req.units_needed > 1 else '' }}</span>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-extrabold text-slate-900">{{ req.patient_name }}</h1>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Compatible Donor Groups: 
+                                <span class="font-bold text-blood-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-100">
+                                    {{ compatible_groups | join(', ') }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Details Table -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 py-5 text-xs">
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                            <span class="text-slate-400 font-semibold block uppercase text-[10px] mb-1">Hospital / Medical Center</span>
+                            <span class="font-bold text-slate-800 text-sm flex items-center">
+                                <i class="fa-solid fa-hospital text-rose-500 mr-2"></i> {{ req.hospital_name }}
+                            </span>
+                            <span class="text-slate-500 block mt-1">{{ req.hospital_address or 'City Center' }}</span>
+                        </div>
+
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                            <span class="text-slate-400 font-semibold block uppercase text-[10px] mb-1">Location</span>
+                            <span class="font-bold text-slate-800 text-sm flex items-center">
+                                <i class="fa-solid fa-location-dot text-rose-500 mr-2"></i> {{ req.city }}, {{ req.state }}
+                            </span>
+                            <span class="text-slate-500 block mt-1">India</span>
+                        </div>
+
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                            <span class="text-slate-400 font-semibold block uppercase text-[10px] mb-1">Contact Coordinator</span>
+                            <span class="font-bold text-slate-800 text-sm flex items-center">
+                                <i class="fa-solid fa-user-tie text-slate-400 mr-2"></i> {{ req.contact_person }}
+                            </span>
+                            <a href="tel:{{ req.contact_phone }}" class="text-blood-600 font-bold hover:underline block mt-1">
+                                <i class="fa-solid fa-phone mr-1 text-[10px]"></i> {{ req.contact_phone }}
+                            </a>
+                        </div>
+
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                            <span class="text-slate-400 font-semibold block uppercase text-[10px] mb-1">Direct Communication</span>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <a href="tel:{{ req.contact_phone }}" class="px-3 py-1.5 bg-blood-600 text-white rounded-lg font-bold hover:bg-blood-700 transition">
+                                    <i class="fa-solid fa-phone mr-1"></i> Call
+                                </a>
+                                <a href="https://wa.me/91{{ req.contact_phone | replace(' ', '') | replace('-', '') }}?text=Hello%20{{ req.contact_person }},%20I%20am%20reaching%20out%20regarding%20the%20emergency%20blood%20request%20for%20{{ req.patient_name }}%20on%20LifeStream." target="_blank"
+                                   class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition">
+                                    <i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical Reason / Case notes -->
+                    <div class="border-t border-slate-100 pt-4">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1">Medical Reason / Clinical Note</span>
+                        <p class="text-xs text-slate-700 leading-relaxed bg-amber-50/60 border border-amber-100 p-3.5 rounded-xl">
+                            "{{ req.reason or 'Urgent transfusion needed for ongoing medical treatment.' }}"
+                        </p>
+                    </div>
+
+                    <!-- Status toggle for admin or requester -->
+                    {% if current_user and (current_user.role == 'admin' or current_user.id == req.requester_id) %}
+                    <div class="border-t border-slate-100 pt-5 mt-6">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-2">Request Management</span>
+                        <form action="{{ url_for('update_request_status', request_id=req.id) }}" method="POST" class="flex items-center space-x-3">
+                            <select name="status" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800">
+                                <option value="Pending" {% if req.status == 'Pending' %}selected{% endif %}>Status: Pending (Active)</option>
+                                <option value="Fulfilled" {% if req.status == 'Fulfilled' %}selected{% endif %}>Status: Fulfilled (Completed)</option>
+                                <option value="Cancelled" {% if req.status == 'Cancelled' %}selected{% endif %}>Status: Cancelled</option>
+                            </select>
+                            <button type="submit" class="px-3.5 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition">
+                                Update Status
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                </div>
+
+                <!-- Volunteer Action Card -->
+                {% if req.status == 'Pending' %}
+                <div class="bg-gradient-to-r from-blood-700 to-rose-600 rounded-2xl p-6 text-white shadow-lg shadow-rose-900/10">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-lg font-extrabold flex items-center">
+                                <i class="fa-solid fa-hand-holding-droplet mr-2 text-rose-200"></i> Can you donate for {{ req.patient_name }}?
+                            </h3>
+                            <p class="text-xs text-rose-100 mt-1 max-w-xl">
+                                Clicking the button below confirms your willingness. Your contact info will be immediately logged and shared with the patient coordinator.
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if current_user and current_user.role == 'donor' %}
+                    <form action="{{ url_for('volunteer_request', request_id=req.id) }}" method="POST" class="mt-4 flex flex-col sm:flex-row gap-3">
+                        <input type="text" name="message" placeholder="Optional note (e.g. I can visit hospital today at 4 PM)..."
+                               class="flex-1 bg-white/10 border border-white/30 rounded-xl px-3.5 py-2 text-xs text-white placeholder-rose-200 focus:outline-none focus:bg-white/20">
+                        <button type="submit" class="px-5 py-2 bg-white text-blood-700 font-bold rounded-xl text-xs hover:bg-rose-50 transition shadow-sm shrink-0">
+                            <i class="fa-solid fa-heart mr-1.5"></i> I Volunteer to Donate
+                        </button>
+                    </form>
+                    {% elif not current_user %}
+                    <div class="mt-4">
+                        <a href="{{ url_for('login', next=request.url) }}" class="inline-flex items-center px-4 py-2 bg-white text-blood-700 font-bold rounded-xl text-xs hover:bg-rose-50 transition">
+                            <i class="fa-solid fa-lock mr-1.5"></i> Log In to Volunteer
+                        </a>
+                        <span class="text-xs text-rose-200 ml-3">Or call the contact directly above.</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Existing Volunteers / Responses -->
+                {% if responses %}
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-900 mb-4 flex items-center">
+                        <i class="fa-solid fa-users text-emerald-600 mr-2"></i> Pledged Volunteers ({{ responses | length }})
+                    </h3>
+                    <div class="space-y-3">
+                        {% for resp in responses %}
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-8 h-8 rounded-lg bg-rose-100 text-blood-700 font-black flex items-center justify-center text-xs">
+                                    {{ resp.blood_group }}
+                                </span>
+                                <div>
+                                    <div class="font-bold text-slate-800">{{ resp.donor_name }}</div>
+                                    <div class="text-slate-400 text-[10px]">{{ resp.city }} • Pledged on {{ resp.created_at[:10] }}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                                    {{ resp.status }}
+                                </span>
+                                <a href="tel:{{ resp.donor_phone }}" class="p-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs" title="Call Donor">
+                                    <i class="fa-solid fa-phone"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- Auto-Matched Compatible Donors in Area (5 cols) -->
+            <div class="lg:col-span-5 space-y-4">
+                
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h3 class="text-sm font-extrabold text-slate-900 flex items-center">
+                                <i class="fa-solid fa-wand-magic-sparkles text-blood-600 mr-2"></i>
+                                Auto-Matched Donors
+                            </h3>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Compatible donors automatically ranked by proximity to {{ req.city }}.</p>
+                        </div>
+                        <span class="bg-rose-100 text-blood-700 font-extrabold text-xs px-2.5 py-1 rounded-full">
+                            {{ matched_donors | length }} Found
+                        </span>
+                    </div>
+
+                    {% if matched_donors %}
+                    <div class="divide-y divide-slate-100 space-y-3 mt-3">
+                        {% for md in matched_donors %}
+                        <div class="pt-3 first:pt-0 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-blood-600 text-white flex items-center justify-center font-extrabold text-xs shadow-sm">
+                                    {{ md.blood_group }}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-xs text-slate-800 flex items-center">
+                                        {{ md.name }}
+                                        {% if md.city_match %}
+                                        <span class="ml-1 text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded font-semibold">Same City</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-[11px] text-slate-400">
+                                        <i class="fa-solid fa-location-dot text-rose-500 mr-1 text-[10px]"></i> {{ md.city }} • {{ md.total_donations }} donations
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-1">
+                                <a href="tel:{{ md.phone }}" class="p-2 bg-blood-50 hover:bg-blood-100 text-blood-700 rounded-lg text-xs font-bold transition" title="Call {{ md.name }}">
+                                    <i class="fa-solid fa-phone"></i>
+                                </a>
+                                <a href="https://wa.me/91{{ md.phone | replace(' ', '') | replace('-', '') }}?text=Hello%20{{ md.name }},%20we%20urgently%20need%20blood%20donation%20for%20{{ req.patient_name }}%20at%20{{ req.hospital_name }}%20in%20{{ req.city }}." 
+                                   target="_blank" class="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition" title="WhatsApp {{ md.name }}">
+                                    <i class="fa-brands fa-whatsapp"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="py-8 text-center text-xs text-slate-400">
+                        <i class="fa-solid fa-user-slash text-2xl mb-2 text-slate-300"></i>
+                        <p>No compatible available donors registered in this area yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Emergency Helpline Helper -->
+                <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-xs text-slate-700">
+                    <div class="font-bold text-blood-800 mb-1 flex items-center">
+                        <i class="fa-solid fa-life-ring mr-1.5"></i> Need Central Blood Bank Stock?
+                    </div>
+                    <p class="text-slate-600 leading-relaxed text-[11px]">
+                        If donors are not readily available, call National Blood Transfusion Council helpline (104) to locate blood units in municipal blood storage centers.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

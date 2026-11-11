@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block title %}LifeStream - Find Blood Donors & Emergency Blood Network{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-b from-rose-50 via-white to-slate-50 pt-12 pb-20 overflow-hidden border-b border-slate-200">
+    <!-- Decorative background elements -->
+    <div class="absolute -top-24 -right-24 w-96 h-96 bg-rose-200 rounded-full blur-3xl opacity-40 pointer-events-none"></div>
+    <div class="absolute top-1/2 -left-20 w-80 h-80 bg-red-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center max-w-3xl mx-auto space-y-4">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-rose-100 text-blood-700 border border-rose-200">
+                <i class="fa-solid fa-heart-pulse text-blood-600 mr-2"></i> Real-time Blood Matching Network
+            </span>
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                Every Drop Counts. <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blood-700 to-rose-500">Find a Life Saver</span> Near You.
+            </h1>
+            <p class="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto font-normal">
+                LifeStream instantly bridges emergency patients, hospitals, and voluntary registered blood donors. Search compatible blood groups within seconds.
+            </p>
+        </div>
+
+        <!-- Fast Search Box -->
+        <div class="mt-10 max-w-4xl mx-auto bg-white rounded-2xl p-4 sm:p-6 shadow-xl shadow-rose-950/5 border border-slate-200/80">
+            <form action="{{ url_for('search') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                
+                <!-- Blood Group Dropdown -->
+                <div class="sm:col-span-4">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                        <i class="fa-solid fa-droplet text-blood-600 mr-1"></i> Blood Group
+                    </label>
+                    <select name="blood_group" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blood-500 focus:bg-white transition">
+                        <option value="">All Blood Groups</option>
+                        <option value="A+">A+ (A Positive)</option>
+                        <option value="A-">A- (A Negative)</option>
+                        <option value="B+">B+ (B Positive)</option>
+                        <option value="B-">B- (B Negative)</option>
+                        <option value="AB+">AB+ (AB Positive - Universal Recipient)</option>
+                        <option value="AB-">AB- (AB Negative)</option>
+                        <option value="O+">O+ (O Positive)</option>
+                        <option value="O-">O- (O Negative - Universal Donor)</option>
+                    </select>
+                </div>
+
+                <!-- City Search -->
+                <div class="sm:col-span-5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                        <i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> City / Location
+                    </label>
+                    <div class="relative">
+                        <input type="text" name="city" placeholder="e.g. Delhi, Mumbai, Bengaluru..." 
+                               class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blood-500 focus:bg-white transition">
+                    </div>
+                </div>
+
+                <!-- Search Button -->
+                <div class="sm:col-span-3 pt-2 sm:pt-6">
+                    <button type="submit" class="w-full bg-blood-600 hover:bg-blood-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-rose-500/25 transition transform active:scale-95 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-magnifying-glass mr-2"></i> Find Donors
+                    </button>
+                </div>
+
+                <!-- Quick Compatibility checkbox -->
+                <div class="sm:col-span-12 flex flex-wrap items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100">
+                    <label class="flex items-center space-x-2 cursor-pointer mt-1">
+                        <input type="checkbox" name="compatible" value="1" checked class="rounded text-blood-600 focus:ring-blood-500">
+                        <span class="text-slate-700 font-medium">Include biologically compatible donor groups (e.g., O- for all)</span>
+                    </label>
+                    <div class="flex items-center space-x-4 mt-1">
+                        <span class="text-slate-400">Need immediate help?</span>
+                        <a href="{{ url_for('post_request') }}" class="text-blood-600 font-bold hover:underline flex items-center">
+                            <i class="fa-solid fa-bolt-lightning mr-1"></i> Post Urgent Blood Call
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Quick Stats Counters -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-12 max-w-5xl mx-auto">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-rose-100 text-blood-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div>
+                    <div class="text-2xl font-extrabold text-slate-900">{{ total_donors }}</div>
+                    <div class="text-xs font-semibold text-slate-500">Registered Donors</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <div class="text-2xl font-extrabold text-slate-900">{{ available_donors }}</div>
+                    <div class="text-xs font-semibold text-slate-500">Available Ready Donors</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <div class="text-2xl font-extrabold text-slate-900">{{ total_requests }}</div>
+                    <div class="text-xs font-semibold text-slate-500">Emergency Requests</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-hand-holding-heart"></i>
+                </div>
+                <div>
+                    <div class="text-2xl font-extrabold text-slate-900">{{ fulfilled_requests }}</div>
+                    <div class="text-xs font-semibold text-slate-500">Transfusions Completed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Emergency Blood Requests Ticker / Grid -->
+<section class="py-14 bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-blood-600">Urgent Requirements</span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Active Emergency Blood Requests</h2>
+                <p class="text-sm text-slate-500 mt-1">Patients in immediate need of blood transfusions across local hospitals.</p>
+            </div>
+            <div class="mt-4 sm:mt-0 flex space-x-3">
+                <a href="{{ url_for('view_requests') }}" class="text-sm font-bold text-blood-600 hover:text-blood-700 flex items-center">
+                    View All Requests <i class="fa-solid fa-arrow-right ml-1.5 text-xs"></i>
+                </a>
+            </div>
+        </div>
+
+        {% if recent_requests %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for req in recent_requests %}
+            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-5 flex flex-col justify-between hover:shadow-md transition relative overflow-hidden group">
+                <div class="absolute top-0 right-0 left-0 h-1 {% if req.urgency_level == 'Critical' %}bg-red-500{% elif req.urgency_level == 'Urgent' %}bg-amber-500{% else %}bg-blue-500{% endif %}"></div>
+                
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold 
+                            {% if req.urgency_level == 'Critical' %}
+                                bg-red-100 text-red-700 border border-red-200 animate-pulse
+                            {% elif req.urgency_level == 'Urgent' %}
+                                bg-amber-100 text-amber-700 border border-amber-200
+                            {% else %}
+                                bg-blue-100 text-blue-700 border border-blue-200
+                            {% endif %}">
+                            <i class="fa-solid fa-circle-exclamation text-[10px] mr-1"></i> {{ req.urgency_level }}
+                        </span>
+                        <span class="text-xs text-slate-400 font-medium">
+                            {{ req.created_at[:10] }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-12 h-12 rounded-xl bg-blood-600 text-white flex flex-col items-center justify-center font-extrabold text-lg shadow-sm">
+                            {{ req.blood_group }}
+                            <span class="text-[9px] font-normal leading-none uppercase">{{ req.units_needed }} Unit{% if req.units_needed > 1 %}s{% endif %}</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">{{ req.patient_name }}</h3>
+                            <p class="text-xs text-slate-500 flex items-center">
+                                <i class="fa-solid fa-hospital text-slate-400 mr-1 text-[11px]"></i> {{ req.hospital_name }}
+                            </p>
+                            <p class="text-xs text-slate-500 flex items-center">
+                                <i class="fa-solid fa-location-dot text-rose-500 mr-1 text-[11px]"></i> {{ req.city }}, {{ req.state }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-600 line-clamp-2 italic mb-4 bg-white p-2.5 rounded-lg border border-slate-100">
+                        "{{ req.reason or 'Urgent transfusion required.' }}"
+                    </p>
+                </div>
+
+                <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
+                    <span class="text-[11px] text-slate-500">Contact: {{ req.contact_person }}</span>
+                    <a href="{{ url_for('request_details', request_id=req.id) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-bold text-white bg-blood-600 hover:bg-blood-700 rounded-lg transition shadow-sm">
+                        View & Help <i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 bg-slate-50 rounded-2xl border border-slate-200">
+            <i class="fa-solid fa-circle-check text-4xl text-emerald-500 mb-3"></i>
+            <h3 class="text-base font-bold text-slate-800">No Pending Emergency Requests</h3>
+            <p class="text-xs text-slate-500 mt-1">All current hospital requirements are fulfilled or resting.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Blood Compatibility Matrix (Visual CSE Guide) -->
+<section class="py-16 bg-slate-50 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <span class="text-xs font-bold uppercase tracking-wider text-blood-600">Medical Knowledge & Algorithmic Matching</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Blood Compatibility Matrix</h2>
+            <p class="text-sm text-slate-500 mt-2">
+                Understanding which blood groups can safely receive red blood cells from different donors.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                                Recipient (Patient)
+                            </th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                                Can Safely Receive From (Donors)
+                            </th>
+                            <th scope="col" class="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                                Special Classification
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        {% for recipient, donors in compatibility_table.items() %}
+                        <tr class="hover:bg-slate-50/70 transition">
+                            <td class="px-6 py-3.5 whitespace-nowrap">
+                                <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-extrabold bg-rose-100 text-blood-700">
+                                    <i class="fa-solid fa-droplet mr-1.5 text-blood-600"></i> {{ recipient }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-3.5">
+                                <div class="flex flex-wrap gap-1.5">
+                                    {% for d in donors %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                        {{ d }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-3.5 whitespace-nowrap text-xs text-slate-500">
+                                {% if recipient == 'AB+' %}
+                                    <span class="text-indigo-600 font-bold"><i class="fa-solid fa-award mr-1"></i> Universal Recipient</span> (Can receive any blood)
+                                {% elif recipient == 'O-' %}
+                                    <span class="text-rose-600 font-bold"><i class="fa-solid fa-star mr-1"></i> Universal Donor</span> (Can only receive O-)
+                                {% elif '-' in recipient %}
+                                    <span class="text-amber-600 font-medium">Rh-Negative</span> (Requires Rh-Negative blood)
+                                {% else %}
+                                    <span class="text-slate-600">Standard Match</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Donor Eligibility & Benefits Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-rose-50/60 p-6 rounded-2xl border border-rose-100">
+                <div class="w-12 h-12 rounded-xl bg-blood-600 text-white flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 mb-2">Donor Eligibility Criteria</h3>
+                <ul class="text-xs text-slate-600 space-y-2">
+                    <li class="flex items-start"><i class="fa-solid fa-check text-emerald-600 mt-0.5 mr-2"></i> Age must be between 18 and 65 years.</li>
+                    <li class="flex items-start"><i class="fa-solid fa-check text-emerald-600 mt-0.5 mr-2"></i> Weight must be at least 45 kg (100 lbs).</li>
+                    <li class="flex items-start"><i class="fa-solid fa-check text-emerald-600 mt-0.5 mr-2"></i> Minimum 90 days gap between donations.</li>
+                    <li class="flex items-start"><i class="fa-solid fa-check text-emerald-600 mt-0.5 mr-2"></i> Healthy hemoglobin level (> 12.5 g/dL).</li>
+                </ul>
+            </div>
+
+            <div class="bg-blue-50/60 p-6 rounded-2xl border border-blue-100">
+                <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-shield-heart"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 mb-2">Health Benefits of Donating</h3>
+                <ul class="text-xs text-slate-600 space-y-2">
+                    <li class="flex items-start"><i class="fa-solid fa-check text-blue-600 mt-0.5 mr-2"></i> Stimulates production of new red blood cells.</li>
+                    <li class="flex items-start"><i class="fa-solid fa-check text-blue-600 mt-0.5 mr-2"></i> Balances harmful iron levels in the bloodstream.</li>
+                    <li class="flex items-start"><i class="fa-solid fa-check text-blue-600 mt-0.5 mr-2"></i> Free mini-health checkup during pre-screening.</li>
+                    <li class="flex items-start"><i class="fa-solid fa-check text-blue-600 mt-0.5 mr-2"></i> Psychological satisfaction of saving 3 lives.</li>
+                </ul>
+            </div>
+
+            <div class="bg-emerald-50/60 p-6 rounded-2xl border border-emerald-100">
+                <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 mb-2">Fast 3-Step Process</h3>
+                <ul class="text-xs text-slate-600 space-y-2">
+                    <li class="flex items-start"><i class="fa-solid fa-1 text-emerald-600 mt-0.5 mr-2 font-bold"></i> <strong>Register Online:</strong> Complete your donor profile with blood group and city.</li>
+                    <li class="flex items-start"><i class="fa-solid fa-2 text-emerald-600 mt-0.5 mr-2 font-bold"></i> <strong>Get Notified:</strong> Receive instant notification when an emergency matches.</li>
+                    <li class="flex items-start"><i class="fa-solid fa-3 text-emerald-600 mt-0.5 mr-2 font-bold"></i> <strong>Donate & Save:</strong> Visit the hospital or blood bank and save a life.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Call to Action Banner -->
+        <div class="mt-12 bg-gradient-to-r from-blood-700 to-rose-600 rounded-3xl p-8 sm:p-12 text-white flex flex-col md:flex-row items-center justify-between shadow-xl shadow-rose-900/10">
+            <div class="space-y-2 text-center md:text-left">
+                <h3 class="text-2xl sm:text-3xl font-extrabold">Ready to become a Life Saver?</h3>
+                <p class="text-rose-100 text-sm max-w-xl">
+                    Join hundreds of active voluntary donors in our database. Your 15 minutes of donation can give someone a lifetime.
+                </p>
+            </div>
+            <div class="mt-6 md:mt-0 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                <a href="{{ url_for('register') }}" class="px-6 py-3.5 rounded-xl font-bold text-blood-700 bg-white hover:bg-rose-50 shadow-md transition transform hover:-translate-y-0.5 text-center text-sm">
+                    <i class="fa-solid fa-user-plus mr-2"></i> Join as Donor
+                </a>
+                <a href="{{ url_for('post_request') }}" class="px-6 py-3.5 rounded-xl font-bold text-white bg-rose-900/40 hover:bg-rose-900/60 border border-white/20 transition text-center text-sm">
+                    <i class="fa-solid fa-hospital mr-2"></i> Need Blood Urgently
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

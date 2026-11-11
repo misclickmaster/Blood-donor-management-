@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Blood Donors - LifeStream{% endblock %}
+
+{% block content %}
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <div class="mb-8">
+            <span class="text-xs font-bold uppercase tracking-wider text-blood-600">Discover Ready Donors</span>
+            <h1 class="text-3xl font-extrabold text-slate-900 mt-1">Find Voluntary Blood Donors</h1>
+            <p class="text-sm text-slate-500 mt-1">Search through verified active donors by blood group, compatibility, and geographic proximity.</p>
+        </div>
+
+        <!-- Filter Panel Card -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm mb-8">
+            <form action="{{ url_for('search') }}" method="GET" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    
+                    <!-- Blood Group Dropdown -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                            <i class="fa-solid fa-droplet text-blood-600 mr-1"></i> Patient's Blood Group
+                        </label>
+                        <select name="blood_group" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blood-500 focus:bg-white transition">
+                            <option value="">All Blood Groups</option>
+                            {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                                <option value="{{ bg }}" {% if selected_blood_group == bg %}selected{% endif %}>
+                                    {{ bg }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- City Filter -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                            <i class="fa-solid fa-city text-rose-500 mr-1"></i> City / Town
+                        </label>
+                        <input type="text" name="city" value="{{ selected_city }}" placeholder="e.g. Mumbai, Delhi..."
+                               class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blood-500 focus:bg-white transition">
+                    </div>
+
+                    <!-- State Filter -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                            <i class="fa-solid fa-map text-slate-400 mr-1"></i> State / Province
+                        </label>
+                        <input type="text" name="state" value="{{ selected_state }}" placeholder="e.g. Maharashtra, Delhi..."
+                               class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blood-500 focus:bg-white transition">
+                    </div>
+
+                    <!-- Submit / Reset Actions -->
+                    <div class="flex items-end space-x-2">
+                        <button type="submit" class="flex-1 bg-blood-600 hover:bg-blood-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shadow-rose-500/20 transition flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-filter mr-1.5"></i> Apply Filters
+                        </button>
+                        <a href="{{ url_for('search') }}" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-semibold transition" title="Reset Filters">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Toggles: Compatible match & Availability -->
+                <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 text-xs">
+                    <div class="flex items-center space-x-6">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" name="available_only" value="1" {% if available_only %}checked{% endif %} class="rounded text-blood-600 focus:ring-blood-500">
+                            <span class="text-slate-700 font-semibold">Available donors only (Ready to donate)</span>
+                        </label>
+                        
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" name="compatible" value="1" {% if compatible_mode %}checked{% endif %} class="rounded text-blood-600 focus:ring-blood-500">
+                            <span class="text-slate-700 font-semibold">Include all medically compatible blood groups</span>
+                        </label>
+                    </div>
+
+                    {% if selected_blood_group and compatible_mode %}
+                    <div class="text-[11px] bg-rose-50 border border-rose-200 text-blood-800 px-3 py-1 rounded-lg">
+                        <strong>For {{ selected_blood_group }}:</strong> Acceptable donor groups are 
+                        <span class="font-bold underline">{{ recipient_matrix.get(selected_blood_group, []) | join(', ') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- Search Results Count Banner -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="text-sm font-bold text-slate-800">
+                Found <span class="text-blood-600">{{ donors | length }}</span> registered donor{{ 's' if donors|length != 1 else '' }}
+                {% if selected_blood_group %} for group <span class="bg-rose-100 text-blood-800 px-2 py-0.5 rounded text-xs">{{ selected_blood_group }}</span>{% endif %}
+                {% if selected_city %} in <span class="text-slate-900 underline">{{ selected_city }}</span>{% endif %}
+            </div>
+            
+            <a href="{{ url_for('post_request') }}" class="text-xs font-bold text-blood-600 hover:underline flex items-center">
+                <i class="fa-solid fa-hand-holding-medical mr-1"></i> Cannot find enough donors? Post Urgent Request
+            </a>
+        </div>
+
+        <!-- Donors Grid -->
+        {% if donors %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for d in donors %}
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md transition relative flex flex-col justify-between">
+                
+                <div>
+                    <!-- Top row: Blood Group Badge & Availability -->
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blood-700 to-rose-500 text-white flex flex-col items-center justify-center font-black text-xl shadow-md shadow-rose-200">
+                                {{ d.blood_group }}
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base flex items-center">
+                                    {{ d.name }}
+                                    {% if d.is_verified %}
+                                    <span title="Verified Donor" class="ml-1.5 text-blue-500 text-xs"><i class="fa-solid fa-circle-check"></i></span>
+                                    {% endif %}
+                                </h3>
+                                <p class="text-xs text-slate-500 flex items-center mt-0.5">
+                                    <i class="fa-solid fa-location-dot text-rose-500 mr-1 text-[11px]"></i> {{ d.city }}, {{ d.state }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Availability Tag -->
+                        {% if d.is_available %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> Available
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                            <i class="fa-solid fa-clock text-[9px] mr-1"></i> Resting / Cooldown
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Donor Details Matrix -->
+                    <div class="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 text-center text-xs mb-4">
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 block font-semibold">Age / Sex</span>
+                            <span class="font-bold text-slate-700">{{ d.age }}y / {{ d.gender[0] }}</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 block font-semibold">Weight</span>
+                            <span class="font-bold text-slate-700">{{ d.weight_kg }} kg</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 block font-semibold">Donations</span>
+                            <span class="font-bold text-emerald-700">{{ d.total_donations }} times</span>
+                        </div>
+                    </div>
+
+                    <!-- Address / Note -->
+                    {% if d.address %}
+                    <p class="text-[11px] text-slate-500 mb-4 flex items-center">
+                        <i class="fa-solid fa-map-pin mr-1.5 text-slate-400"></i> {{ d.address }}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- Contact & Action Buttons -->
+                <div class="pt-3 border-t border-slate-100 space-y-2">
+                    <div class="flex items-center space-x-2">
+                        <!-- Direct Call -->
+                        <a href="tel:{{ d.phone }}" class="flex-1 inline-flex items-center justify-center px-3 py-2 text-xs font-bold rounded-xl text-white bg-blood-600 hover:bg-blood-700 shadow-sm transition">
+                            <i class="fa-solid fa-phone mr-1.5"></i> Call Donor
+                        </a>
+                        <!-- WhatsApp Chat -->
+                        <a href="https://wa.me/91{{ d.phone | replace(' ', '') | replace('-', '') }}?text=Hello%20{{ d.name }},%20we%20found%20your%20profile%20on%20LifeStream%20Blood%20Finder.%20Are%20you%20available%20for%20a%20blood%20donation?" 
+                           target="_blank" rel="noopener noreferrer"
+                           class="inline-flex items-center justify-center p-2 text-xs font-bold rounded-xl text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition" title="Message on WhatsApp">
+                            <i class="fa-brands fa-whatsapp text-base"></i>
+                        </a>
+                    </div>
+                    <div class="text-[10px] text-center text-slate-400">
+                        Phone: <span class="font-mono text-slate-700 font-semibold">{{ d.phone }}</span>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center max-w-lg mx-auto shadow-sm">
+            <div class="w-16 h-16 rounded-full bg-rose-50 text-blood-600 flex items-center justify-center text-2xl mx-auto mb-4">
+                <i class="fa-solid fa-magnifying-glass-chart"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">No Matching Donors Found</h3>
+            <p class="text-xs text-slate-500 mb-6 leading-relaxed">
+                We couldn't find available donors matching your current filter criteria. Try expanding your search to include compatible blood groups or nearby cities.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="{{ url_for('search') }}" class="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                    Clear All Filters
+                </a>
+                <a href="{{ url_for('post_request') }}" class="px-4 py-2 text-xs font-bold text-white bg-blood-600 hover:bg-blood-700 rounded-xl transition shadow-sm">
+                    <i class="fa-solid fa-hospital mr-1"></i> Post Emergency Blood Need
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

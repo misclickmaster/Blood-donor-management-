@@ -1,0 +1,27 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "1. Run LifeStream Server",
+            "type": "shell",
+            "command": "python app.py",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "2. Setup / Seed MySQL Database",
+            "type": "shell",
+            "command": "python setup_mysql.py",
+            "problemMatcher": []
+        },
+        {
+            "label": "3. Install Project Dependencies",
+            "type": "shell",
+            "command": "python -m pip install -r requirements.txt",
+            "problemMatcher": []
+        }
+    ]
+}

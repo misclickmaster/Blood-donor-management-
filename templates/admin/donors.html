@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Donors - Admin Panel - LifeStream{% endblock %}
+
+{% block content %}
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Admin Navigation Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                    <i class="fa-solid fa-users-gear mr-1.5"></i> Donor Management
+                </span>
+                <h1 class="text-3xl font-extrabold text-slate-900 mt-1">Manage Registered Donors</h1>
+            </div>
+
+            <!-- Admin Nav Tabs -->
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ url_for('admin_dashboard') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-chart-pie mr-1.5"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin_donors') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm">
+                    <i class="fa-solid fa-users mr-1.5"></i> Manage Donors
+                </a>
+                <a href="{{ url_for('admin_requests') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-heart-pulse mr-1.5"></i> Manage Requests
+                </a>
+                <a href="{{ url_for('admin_database') }}" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 transition">
+                    <i class="fa-solid fa-database mr-1.5"></i> Database Management
+                </a>
+            </div>
+        </div>
+
+        <!-- Search & Filter Card -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-6">
+            <form action="{{ url_for('admin_donors') }}" method="GET" class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search by donor name, email, city, phone..."
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div class="w-full sm:w-48">
+                    <select name="blood_group" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">All Blood Groups</option>
+                        {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                            <option value="{{ bg }}" {% if selected_blood_group == bg %}selected{% endif %}>{{ bg }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
+                        <i class="fa-solid fa-magnifying-glass mr-1"></i> Search
+                    </button>
+                    <a href="{{ url_for('admin_donors') }}" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs transition flex items-center" title="Reset">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Donors Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-xs">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Donor</th>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Blood Group</th>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Contact</th>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Location</th>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Availability</th>
+                            <th scope="col" class="px-4 py-3 text-left font-bold text-slate-600 uppercase tracking-wider">Verification</th>
+                            <th scope="col" class="px-4 py-3 text-right font-bold text-slate-600 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        {% for d in donors %}
+                        <tr class="hover:bg-slate-50/80 transition">
+                            <!-- Donor Profile -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="font-bold text-slate-900">{{ d.name }}</div>
+                                <div class="text-[10px] text-slate-400">{{ d.gender }} • {{ d.age }} yrs • {{ d.weight_kg }}kg</div>
+                            </td>
+
+                            <!-- Blood Group -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-black bg-rose-100 text-blood-700">
+                                    {{ d.blood_group }}
+                                </span>
+                            </td>
+
+                            <!-- Contact -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="text-slate-800 font-mono">{{ d.phone }}</div>
+                                <div class="text-[10px] text-slate-400">{{ d.email }}</div>
+                            </td>
+
+                            <!-- Location -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="text-slate-800 font-medium">{{ d.city }}, {{ d.state }}</div>
+                                <div class="text-[10px] text-slate-400">{{ d.pincode or 'No pin' }}</div>
+                            </td>
+
+                            <!-- Availability -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                {% if d.is_available %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Available
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
+                                        Cooldown / Off
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Verification -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <form action="{{ url_for('admin_toggle_verify_donor', donor_id=d.id) }}" method="POST">
+                                    {% if d.is_verified %}
+                                    <button type="submit" class="inline-flex items-center text-[11px] font-bold text-blue-600 hover:text-blue-800" title="Click to unverify">
+                                        <i class="fa-solid fa-circle-check mr-1"></i> Verified
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="inline-flex items-center text-[11px] font-bold text-amber-600 hover:text-amber-800" title="Click to verify">
+                                        <i class="fa-regular fa-circle mr-1"></i> Unverified
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="px-4 py-3 whitespace-nowrap text-right">
+                                <form action="{{ url_for('admin_delete_donor', donor_id=d.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this donor?');" class="inline">
+                                    <button type="submit" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition" title="Delete Donor">
+                                        <i class="fa-solid fa-trash-can text-sm"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
