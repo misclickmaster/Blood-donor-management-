@@ -14,13 +14,22 @@ from database import (
     COMPATIBILITY_DONOR_CAN_GIVE_TO
 )
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, 'templates'),
+    static_folder=os.path.join(BASE_DIR, 'static')
+)
 app.secret_key = config.SECRET_KEY
 
-# Ensure database is initialized on startup
-with app.app_context():
-    init_db()
-    seed_sample_data()
+# Ensure database is safely initialized on startup
+try:
+    with app.app_context():
+        init_db()
+        seed_sample_data()
+except Exception as e:
+    print(f"[STARTUP DB INIT NOTE] Deferred initialization: {e}")
 
 # ----------------- Helper Functions & Decorators -----------------
 
